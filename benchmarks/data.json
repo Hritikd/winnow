@@ -1,0 +1,110 @@
+[
+  {
+    "query": "how do I rotate an expired API key without downtime?",
+    "gold": ["c5", "c7"],
+    "chunks": [
+      {"id": "c0", "text": "Welcome to the platform. This guide covers account creation, billing tiers, and how to invite teammates to your workspace from the settings panel."},
+      {"id": "c1", "text": "Our dashboard provides usage charts, monthly invoices, and a notifications center. You can export charts as PNG or CSV for reporting."},
+      {"id": "c2", "text": "Support is available 24/7 via chat. Enterprise customers also get a dedicated success manager and a private Slack channel."},
+      {"id": "c3", "text": "The mobile app mirrors the web dashboard and supports push notifications for budget alerts and weekly summaries."},
+      {"id": "c4", "text": "API keys are created in Settings > Developers. Each key is scoped to a single project and can be named for easy identification."},
+      {"id": "c5", "text": "To rotate an expired API key without downtime, first create a new key, deploy it to all services, confirm traffic is flowing on the new key, then revoke the old key. Overlapping keys avoid any gap in authentication."},
+      {"id": "c6", "text": "Rate limits are enforced per key. The default is 600 requests per minute; contact sales to raise the ceiling for production workloads."},
+      {"id": "c7", "text": "Key rotation can be automated with the CLI: `platform keys rotate --grace 24h` issues a new key and keeps the previous one valid for a 24 hour overlap window before automatic revocation."},
+      {"id": "c8", "text": "Webhooks deliver events to your endpoint with an HMAC signature. Verify the signature header before trusting any payload."}
+    ]
+  },
+  {
+    "query": "why did checkout latency spike on Tuesday?",
+    "gold": ["c6", "c2"],
+    "chunks": [
+      {"id": "c0", "text": "The frontend team shipped a new product page with lazy-loaded images and a redesigned navigation bar this sprint."},
+      {"id": "c1", "text": "Marketing launched a spring campaign that drove a 30% increase in homepage visits, mostly from social referrals."},
+      {"id": "c2", "text": "Checkout latency spiked on Tuesday because a database connection pool was exhausted after a deploy lowered the pool size from 50 to 10 connections."},
+      {"id": "c3", "text": "Our analytics pipeline batches events every five minutes and writes them to the warehouse for the BI dashboards."},
+      {"id": "c4", "text": "The design system was updated with new color tokens and accessible focus states across all buttons and form fields."},
+      {"id": "c5", "text": "We use feature flags to gradually roll out risky changes and can disable a flag instantly if metrics regress."},
+      {"id": "c6", "text": "Root cause of the Tuesday checkout latency spike: the connection pool change combined with the campaign traffic caused requests to queue for database connections, adding 800ms p95 latency until the pool was raised back to 50."},
+      {"id": "c7", "text": "The incident was mitigated by reverting the pool size and adding an alert on connection saturation above 80%."}
+    ]
+  },
+  {
+    "query": "what is the refund window for annual plans?",
+    "gold": ["c4"],
+    "chunks": [
+      {"id": "c0", "text": "Plans are billed monthly or annually. Annual plans receive a 20% discount compared to paying month to month."},
+      {"id": "c4", "text": "Refund window: annual plans are eligible for a full refund within 30 days of purchase. After 30 days, annual plans are non-refundable but remain active until the end of the term."},
+      {"id": "c1", "text": "You can upgrade or downgrade at any time; changes are prorated against your current billing period automatically."},
+      {"id": "c2", "text": "Payment methods include major credit cards and, for enterprise, invoicing with net-30 terms."},
+      {"id": "c3", "text": "Taxes are calculated at checkout based on your billing address and applicable local regulations."},
+      {"id": "c5", "text": "Monthly plans can be cancelled anytime and simply stop renewing at the next cycle; no partial refunds are issued for monthly plans."},
+      {"id": "c6", "text": "Failed payments trigger three retry attempts over a week before the subscription is paused and access is restricted."}
+    ]
+  },
+  {
+    "query": "how does the retriever handle duplicate documents?",
+    "gold": ["c3", "c6"],
+    "chunks": [
+      {"id": "c0", "text": "The ingestion service accepts PDFs, HTML, and Markdown, then splits them into overlapping passages for indexing."},
+      {"id": "c1", "text": "Embeddings are computed with a sentence-transformer model and stored in a vector database with cosine similarity search."},
+      {"id": "c2", "text": "The retriever returns the top-k passages by similarity, which are then re-ranked by a cross-encoder before being sent to the LLM."},
+      {"id": "c3", "text": "Duplicate documents are handled by content hashing at ingestion: identical passages share a single vector, and near-duplicates are collapsed using a similarity threshold of 0.95."},
+      {"id": "c4", "text": "The cross-encoder re-ranker improves precision by scoring each query-passage pair jointly rather than independently."},
+      {"id": "c5", "text": "Passages carry metadata such as source URL, section heading, and ingestion timestamp for filtering and citation."},
+      {"id": "c6", "text": "At query time, a deduplication pass removes near-identical retrieved passages so the context window is not wasted on redundant copies of the same content."},
+      {"id": "c7", "text": "Caching of query embeddings reduces latency for repeated questions and lowers embedding API costs."}
+    ]
+  },
+  {
+    "query": "what permissions are required to delete a production cluster?",
+    "gold": ["c5"],
+    "chunks": [
+      {"id": "c0", "text": "Clusters can be created from the console, the CLI, or via the Terraform provider using a service account token."},
+      {"id": "c1", "text": "Each cluster belongs to a project, and projects are grouped into organizations for billing and access control."},
+      {"id": "c5", "text": "Deleting a production cluster requires the Cluster Admin role plus a second approval from an organization Owner; the action is also gated behind a typed confirmation of the cluster name."},
+      {"id": "c2", "text": "Node pools can autoscale between a minimum and maximum count based on pending workloads and resource pressure."},
+      {"id": "c3", "text": "Read-only viewers can see cluster status and logs but cannot modify any cluster configuration or workloads."},
+      {"id": "c4", "text": "Editors can deploy workloads, change autoscaling settings, and manage secrets within a project's clusters."},
+      {"id": "c6", "text": "Audit logs capture every cluster create, update, and delete event with the actor, timestamp, and source IP."}
+    ]
+  },
+  {
+    "query": "how do I configure exponential backoff for retries?",
+    "gold": ["c4", "c7"],
+    "chunks": [
+      {"id": "c0", "text": "The SDK is available for Python, TypeScript, and Go, with consistent method names across all three languages."},
+      {"id": "c1", "text": "Authentication uses a bearer token passed in the Authorization header on every request to the API."},
+      {"id": "c2", "text": "Responses are paginated with a cursor; pass the returned cursor to fetch the next page of results."},
+      {"id": "c3", "text": "Errors return a structured JSON body with a machine-readable code and a human-readable message field."},
+      {"id": "c4", "text": "Configure exponential backoff by setting the retry policy: an initial delay, a multiplier, and a maximum delay. For example, base 200ms, multiplier 2, max 10s yields delays of 200ms, 400ms, 800ms, and so on, capped at 10 seconds."},
+      {"id": "c5", "text": "Idempotency keys let you safely retry write requests without creating duplicate resources on the server."},
+      {"id": "c6", "text": "Timeouts default to 30 seconds per request and can be overridden per call through the client options object."},
+      {"id": "c7", "text": "Add jitter to exponential backoff to avoid thundering-herd retries: randomize each delay within its computed window so many clients do not retry in lockstep after an outage."}
+    ]
+  },
+  {
+    "query": "what data is stored when a user signs up?",
+    "gold": ["c2"],
+    "chunks": [
+      {"id": "c0", "text": "The signup flow asks for an email address and password, with optional single sign-on through Google or GitHub."},
+      {"id": "c1", "text": "After signup, users are guided through a short onboarding checklist to connect their first data source."},
+      {"id": "c2", "text": "On signup we store the user's email, a salted password hash, account creation timestamp, and the signup source. We do not store the raw password, and payment details are tokenized by our payment processor rather than stored directly."},
+      {"id": "c3", "text": "Profile pictures are optional and served from a CDN with a content hash in the URL for cache-busting."},
+      {"id": "c4", "text": "Email verification is required before a user can invite teammates or create API keys."},
+      {"id": "c5", "text": "Users can delete their account at any time, which triggers a 30-day soft-delete window before permanent erasure."}
+    ]
+  },
+  {
+    "query": "how are evaluation scores aggregated across test cases?",
+    "gold": ["c5", "c3"],
+    "chunks": [
+      {"id": "c0", "text": "The evaluation harness loads a suite of test cases, each with an input prompt and an expected behavior specification."},
+      {"id": "c1", "text": "Each test case is run against the model under test, and the raw output is captured along with latency and token usage."},
+      {"id": "c2", "text": "Graders can be exact-match, regex, or an LLM-as-judge that returns a pass/fail with a short rationale."},
+      {"id": "c3", "text": "Per-case scores are aggregated into a suite score by taking the mean pass rate, with optional weighting so that critical safety cases count more than cosmetic ones."},
+      {"id": "c4", "text": "Results are written to a JSON report and rendered as an HTML dashboard with sortable columns and trend charts."},
+      {"id": "c5", "text": "Aggregation also computes a weighted mean across categories, then reports a confidence interval using bootstrap resampling so small suites do not over-state a score difference between two model versions."},
+      {"id": "c6", "text": "Regression detection flags any category whose score dropped beyond a threshold compared to the previous run."}
+    ]
+  }
+]
