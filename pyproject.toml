@@ -1,0 +1,52 @@
+[project]
+name = "winnow-context"
+version = "0.1.0"
+description = "Budget-aware context compression for RAG and LLM agents — deterministic, offline, measurable."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Hritik Datta", email = "hritikdatta2403@gmail.com" }]
+keywords = [
+    "llm", "rag", "context", "context-engineering", "compression",
+    "agents", "bm25", "mmr", "prompt-engineering", "token-budget",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Operating System :: OS Independent",
+]
+dependencies = []
+
+[project.optional-dependencies]
+tiktoken = ["tiktoken>=0.5"]
+dev = ["pytest>=7.4", "ruff>=0.1"]
+
+[project.urls]
+Homepage = "https://github.com/Hritikd/winnow"
+Repository = "https://github.com/Hritikd/winnow"
+Issues = "https://github.com/Hritikd/winnow/issues"
+
+[project.scripts]
+winnow = "winnow.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/winnow"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
