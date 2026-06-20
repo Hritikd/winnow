@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>winnow — live demo · context compression for RAG &amp; agents</title>
+<meta name="description" content="Interactive demo of winnow: budget-aware context compression. Runs the real Python library in your browser via Pyodide." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%BE%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0a0a0b; --panel:#141417; --panel2:#1b1b20; --line:#2a2a31;
+    --text:#e7e7ea; --muted:#9a9aa5; --accent:#4ade80; --accent2:#22c55e;
+    --drop:#3a3a42; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 80px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  h1{font-size:1.9rem;font-weight:800;margin:0;letter-spacing:-.02em}
+  h1 .em{color:var(--accent)}
+  .sub{color:var(--muted);margin:6px 0 0;max-width:680px}
+  .links{display:flex;gap:14px;font-size:.92rem;font-weight:600}
+  .pill{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin-top:14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em}
+  textarea,input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);font-family:Inter,sans-serif;font-size:.92rem;padding:11px 12px;resize:vertical}
+  textarea{min-height:220px;font-size:.86rem}
+  .row{display:flex;gap:16px;margin-top:14px}
+  .row > div{flex:1}
+  .val{font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:500}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  button{margin-top:16px;width:100%;background:var(--accent);color:#05230f;border:none;border-radius:10px;padding:12px;font-weight:700;font-size:.98rem;cursor:pointer;font-family:Inter,sans-serif}
+  button:disabled{opacity:.5;cursor:wait}
+  button:hover:not(:disabled){background:var(--accent2)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
+  .stat .n{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:600;color:var(--accent)}
+  .stat .l{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:3px}
+  .chunk{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px;font-size:.88rem;position:relative;transition:.15s}
+  .chunk.kept{background:rgba(74,222,128,.07);border-color:rgba(74,222,128,.4)}
+  .chunk.dropped{background:transparent;color:var(--muted);opacity:.6}
+  .chunk .meta{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);margin-bottom:5px;display:flex;justify-content:space-between}
+  .chunk.kept .tag{color:var(--accent);font-weight:600}
+  .chunk.dropped .tag{color:var(--drop)}
+  .status{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--muted);margin-top:14px;min-height:20px}
+  .note{color:var(--muted);font-size:.82rem;margin-top:30px;border-top:1px solid var(--line);padding-top:18px}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🌾 <span class="em">winnow</span> — live demo</h1>
+      <p class="sub">Budget-aware context compression for RAG &amp; agents. Paste a context, set a token budget, and watch winnow keep the highest-signal chunks. This runs the <b>real Python library</b> in your browser via Pyodide — no server, no API keys.</p>
+    </div>
+    <div class="links">
+      <a href="https://github.com/Hritikd/winnow">GitHub ↗</a>
+    </div>
+  </header>
+  <span class="pill" id="engine"><span class="spin"></span>booting Python runtime…</span>
+
+  <div class="grid">
+    <div class="card">
+      <label for="query">Query</label>
+      <input type="text" id="query" value="how do I rotate an expired API key without downtime?" />
+      <label for="ctx" style="margin-top:14px">Context — one chunk per blank line</label>
+      <textarea id="ctx"></textarea>
+      <div class="row">
+        <div>
+          <label>Token budget · <span class="val" id="budgetVal">80</span></label>
+          <input type="range" id="budget" min="20" max="360" value="80" step="5" />
+        </div>
+        <div>
+          <label>λ (relevance ↔ diversity) · <span class="val" id="lamVal">0.70</span></label>
+          <input type="range" id="lam" min="0" max="1" value="0.7" step="0.05" />
+        </div>
+      </div>
+      <button id="run" disabled>Compress</button>
+    </div>
+
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><div class="n" id="sOrig">—</div><div class="l">orig tokens</div></div>
+        <div class="stat"><div class="n" id="sKept">—</div><div class="l">kept tokens</div></div>
+        <div class="stat"><div class="n" id="sRed">—</div><div class="l">reduction</div></div>
+        <div class="stat"><div class="n" id="sChunks">—</div><div class="l">chunks kept</div></div>
+      </div>
+      <div id="output"></div>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <p class="note">winnow scores each chunk with BM25 relevance to the query, then selects with Maximal Marginal Relevance under the token budget — keeping relevant chunks while pruning near-duplicates. Kept chunks are highlighted; dropped chunks are dimmed. The Python running here is fetched verbatim from <a href="https://github.com/Hritikd/winnow/tree/main/src/winnow">src/winnow</a>.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+<script>
+const SAMPLE = `Welcome to the platform. This guide covers account creation, billing tiers, and how to invite teammates to your workspace from the settings panel.
+
+Our dashboard provides usage charts, monthly invoices, and a notifications center. You can export charts as PNG or CSV for reporting.
+
+Support is available 24/7 via chat. Enterprise customers also get a dedicated success manager and a private Slack channel.
+
+API keys are created in Settings > Developers. Each key is scoped to a single project and can be named for easy identification.
+
+To rotate an expired API key without downtime, first create a new key, deploy it to all services, confirm traffic is flowing on the new key, then revoke the old key. Overlapping keys avoid any gap in authentication.
+
+Rate limits are enforced per key. The default is 600 requests per minute; contact sales to raise the ceiling for production workloads.
+
+Key rotation can be automated with the CLI: run keys rotate --grace 24h to issue a new key and keep the previous one valid for a 24 hour overlap window before automatic revocation.
+
+Webhooks deliver events to your endpoint with an HMAC signature. Verify the signature header before trusting any payload.`;
+
+const $ = (id) => document.getElementById(id);
+$("ctx").value = SAMPLE;
+$("budget").oninput = () => $("budgetVal").textContent = $("budget").value;
+$("lam").oninput = () => $("lamVal").textContent = (+$("lam").value).toFixed(2);
+
+const WIN_FILES = ["__init__","text","tokenizer","bm25","vectorize","types","compressor"];
+let pyReady = false, runFn = null;
+
+async function boot(){
+  try{
+    const pyodide = await loadPyodide();
+    pyodide.FS.mkdir("winnow");
+    for(const f of WIN_FILES){
+      const src = await (await fetch(`./pysrc/winnow/${f}.py`)).text();
+      pyodide.FS.writeFile(`winnow/${f}.py`, src);
+    }
+    pyodide.runPython(`
+import sys, json
+sys.path.insert(0, '')
+from winnow import compress, Chunk
+
+def _run(query, text, budget, lam):
+    paras = [p.strip() for p in text.split('\\n\\n') if p.strip()]
+    chunks = [Chunk(str(i), p) for i, p in enumerate(paras)]
+    r = compress(query, chunks, int(budget), lambda_=float(lam))
+    rows = ([dict(id=s.chunk.id, text=s.chunk.text, rel=round(s.relevance,3), tok=s.tokens, kept=True) for s in r.kept]
+          + [dict(id=s.chunk.id, text=s.chunk.text, rel=round(s.relevance,3), tok=s.tokens, kept=False) for s in r.dropped])
+    rows.sort(key=lambda x: int(x['id']))
+    return json.dumps(dict(orig=r.original_tokens, kept=r.kept_tokens,
+                           reduction=round(r.reduction,3), nkept=len(r.kept), rows=rows))
+`);
+    runFn = pyodide.globals.get("_run");
+    pyReady = true;
+    $("engine").innerHTML = "⚡ Python runtime ready — runs fully in your browser";
+    $("run").disabled = false;
+    compress();
+  }catch(e){
+    $("engine").innerHTML = "⚠️ failed to start runtime: " + e.message;
+  }
+}
+
+function compress(){
+  if(!pyReady) return;
+  $("run").disabled = true;
+  $("status").textContent = "compressing…";
+  try{
+    const out = JSON.parse(runFn($("query").value, $("ctx").value, $("budget").value, $("lam").value));
+    $("sOrig").textContent = out.orig;
+    $("sKept").textContent = out.kept;
+    $("sRed").textContent = Math.round(out.reduction*100) + "%";
+    $("sChunks").textContent = out.nkept + "/" + out.rows.length;
+    $("output").innerHTML = out.rows.map(r => `
+      <div class="chunk ${r.kept?'kept':'dropped'}">
+        <div class="meta"><span class="tag">${r.kept?'● KEPT':'○ dropped'}</span><span>rel ${r.rel} · ${r.tok} tok</span></div>
+        ${r.text.replace(/</g,'&lt;')}
+      </div>`).join("");
+    $("status").textContent = `kept ${out.nkept} of ${out.rows.length} chunks · ${out.kept}/${out.orig} tokens`;
+  }catch(e){
+    $("status").textContent = "error: " + e.message;
+  }finally{
+    $("run").disabled = false;
+  }
+}
+$("run").onclick = compress;
+boot();
+</script>
+</body>
+</html>
