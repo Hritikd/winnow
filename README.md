@@ -13,6 +13,10 @@
   <img alt="Dependencies: 0" src="https://img.shields.io/badge/runtime%20deps-0-success.svg" />
 </p>
 
+<p align="center">
+  <b><a href="https://hritikd.github.io/winnow/">▶ Try the live demo</a></b> — runs the real library in your browser (Pyodide), no install, no API keys.
+</p>
+
 ---
 
 ## The problem
